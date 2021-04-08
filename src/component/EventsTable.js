@@ -42,7 +42,7 @@ export const EventsTable = ({ events = [], ...props }) => {
               </TableCell>
               <TableCell align="right">{event.touchScore}</TableCell>
               <TableCell align="right">{event.value}</TableCell>
-              <TableCell align="right">{event.newState}</TableCell>
+              <TableCell align="right">{event.hpState}</TableCell>
             </TableRow>
           ))}
         </TableBody>
