@@ -39,20 +39,26 @@ export const estimateHps = (target, hpState, damageReceived) => {
       );
     }
   } else {
-    if (hpState === "orange") {
-      hpMax = Math.min(
-        3 * damageReceived, targetHpMax
-      );
-    }
-
-    if (hpState === "red") {
-      hpMax = Math.min(
-        (3 / 2) * damageReceived, targetHpMax
-      );
-    }
-
     if (hpState === "dead") {
       hpMax = Math.min(damageReceived, targetHpMax);
+    }
+    else {
+      // Not dead so hpMin is equal to damageReceived
+      hpMin = Math.max(
+          damageReceived, targetHpMin
+      );
+
+      if (hpState === "orange") {
+        hpMax = Math.min(
+          3 * damageReceived, targetHpMax
+        );
+      }
+
+      if (hpState === "red") {
+        hpMax = Math.min(
+          (3 / 2) * damageReceived, targetHpMax
+        );
+      }
     }
   }
 
