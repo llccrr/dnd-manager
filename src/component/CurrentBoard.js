@@ -81,7 +81,7 @@ export const CurrentBoard = ({
   const formatMonsters = board?.monsters?.map((monster) => ({
     gameId: monster.gameId,
     ...monster,
-    remainingHp: monster.hpMax - monster.damageReceived || monster.hpMax,
+    remainingHp: monster.hpMax ? monster.hpMax - monster.damageReceived : null,
     id: uuid(),
   }));
 

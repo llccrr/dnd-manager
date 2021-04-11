@@ -43,6 +43,7 @@ export const GameSheets = () => {
   const addMonsterToGame = (id) => {
     writeData(`currentBoard/monsters/${currentBoard.monsters?.length || 0}`, {
       monsterId: id,
+      damageReceived: 0
     });
   };
 
