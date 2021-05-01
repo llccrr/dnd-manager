@@ -131,6 +131,13 @@ export const GameSheets = () => {
     writeData(`currentBoard/monsters/${index}/gameId`, e.target.value);
   };
 
+  const onMonsterAvatarChange = (monsterId) => (e) => {
+    e.preventDefault();
+    // console.log('value', e.target.value)
+    //   console.log('monsterId', monsterId);
+      writeData(`monsters/${monsterId}/avatarUrl`, e.target.value);
+  };
+
   const setActorOrTargets = (entity) => {
     if (!actor) {
       setActor(entity);
@@ -187,6 +194,7 @@ export const GameSheets = () => {
         board={populateBoard}
         updateGameId={updateGameId}
         onSelectedChange={onSelectedPlayerChange}
+        onMonsterAvatarChange={onMonsterAvatarChange}
       />
       <EventBuilder
         actor={actor}
