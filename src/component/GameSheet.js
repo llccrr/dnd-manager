@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import uuid from 'react-uuid';
+import { Button } from '@material-ui/core';
 import { EventsTable } from './EventsTable';
 import ComboBox from './Form/Combobox';
 import { CurrentBoard } from './CurrentBoard';
 import { Players } from './Players';
 import { EventBuilder } from './EventBuilder';
 import { listenData, pushData, writeData } from '../firebase/database';
-import { Button } from '@material-ui/core';
 import { estimateAc, estimateHps } from '../utils/estimations';
 
 export const GameSheets = () => {
@@ -24,7 +25,6 @@ export const GameSheets = () => {
             setMonsters(monsters);
         });
         listenData('currentBoard', (board) => {
-            console.log('currentBoard', currentBoard);
             setCurrentBoard(board);
         });
     }, []);
@@ -35,25 +35,23 @@ export const GameSheets = () => {
     };
 
     const saveAndEnd = () => {
-        console.log('saving..');
-        console.log('currBoard', currentBoard);
         pushData('games', currentBoard);
     };
 
     const addMonsterToGame = (id) => {
+        const uid = uuid();
         writeData(`currentBoard/monsters/${currentBoard.monsters?.length || 0}`, {
             monsterId: id,
+            id: uid,
+            gameId: uid,
             damageReceived: 0,
         });
     };
 
     const onEventValidated = (eventObj) => () => {
         // Add the event
-        console.log('ici');
         const newTarget = target;
         Object.keys(target).forEach((key) => newTarget[key] === undefined && delete newTarget[key]);
-        console.log(newTarget);
-
         pushData(`currentBoard/events/`, {
             ...eventObj,
             target: newTarget,
@@ -61,9 +59,6 @@ export const GameSheets = () => {
             creationDate: new Date().getTime(),
         });
         const targetKey = currentBoard.monsters.findIndex((it) => it.gameId === target.gameId);
-
-        console.log('currentBoard.monsters', currentBoard.monsters);
-        console.log('target', target);
 
         if (targetKey === -1) {
             console.log('didnt find the minster');
@@ -73,21 +68,16 @@ export const GameSheets = () => {
         if (eventObj.type === 'attack') {
             if (eventObj.touchScore) {
                 const ac = estimateAc(target, eventObj.touchScore, eventObj.value);
-                console.log('ac', ac);
                 const [key, value] = Object.entries(ac)[0];
                 // update CA
                 writeData(`monsters/${target.monsterId}/${key}`, value);
             }
             if (eventObj.value) {
-                console.log('target.gameId', target.gameId);
-                console.log('currentBoard.monsters', currentBoard.monsters);
-
                 const newDamageReceived = parseInt(target.damageReceived || 0) + parseInt(eventObj.value || 0);
                 writeData(`currentBoard/monsters/${targetKey}/damageReceived`, newDamageReceived);
                 const newHps = estimateHps(target, eventObj.hpState, newDamageReceived);
 
                 writeData(`currentBoard/monsters/${targetKey}/hpState`, eventObj.hpState);
-                console.log('newHps', newHps);
 
                 if (newHps.hpMax) {
                     writeData(`monsters/${target.monsterId}/hpMax`, newHps.hpMax);
@@ -115,15 +105,13 @@ export const GameSheets = () => {
         writeData(`/monsters/${date}`, { monsterId: date, name, hpState: 'green' });
     };
 
-    const updateGameId = (index) => (e) => {
+    const updateMonsterInitiative = (index) => (e) => {
         e.preventDefault();
-        writeData(`currentBoard/monsters/${index}/gameId`, e.target.value);
+        writeData(`currentBoard/monsters/${index}/monsterInitiative`, e.target.value);
     };
 
     const onMonsterAvatarChange = (monsterId) => (e) => {
         e.preventDefault();
-        // console.log('value', e.target.value)
-        //   console.log('monsterId', monsterId);
         writeData(`monsters/${monsterId}/avatarUrl`, e.target.value);
     };
 
@@ -180,7 +168,7 @@ export const GameSheets = () => {
             <Players players={players} onPlayerClick={onPlayerClick} />
             <CurrentBoard
                 board={populateBoard}
-                updateGameId={updateGameId}
+                updateMonsterInitiative={updateMonsterInitiative}
                 onSelectedChange={onSelectedPlayerChange}
                 onMonsterAvatarChange={onMonsterAvatarChange}
             />

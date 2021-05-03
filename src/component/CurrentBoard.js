@@ -1,10 +1,14 @@
 import React from 'react';
-import uuid from 'react-uuid';
 import { DataGrid } from '@material-ui/data-grid';
 import styled from 'styled-components';
 import { Avatar } from '@material-ui/core';
 
-const columns = ({ onGameIdChange, onMonsterAvatarChange, onAdd }) => [
+const HpColors = {
+    green: '#4caf50',
+    orange: '#ff9800',
+    red: '#2196f3',
+};
+const columns = ({ onInitiativeChange, onMonsterAvatarChange, onAdd, duplicates }) => [
     {
         field: '',
         headerName: '',
@@ -12,25 +16,30 @@ const columns = ({ onGameIdChange, onMonsterAvatarChange, onAdd }) => [
         renderCell: (params) => {
             return (
                 <strong>
-                    <button style={{ width: '50px' }} onClick={onAdd(params.row)}>
-                        Add
+                    <button
+                        style={{ width: '40px', height: '40px', fontSize: '30px', cursor: 'pointer', marginTop: 10 }}
+                        onClick={onAdd(params.row)}
+                    >
+                        +
                     </button>
                 </strong>
             );
         },
     },
     {
-        field: 'gameId',
-        headerName: 'Game ID',
-        width: 120,
+        field: 'monsterInitiative',
+        headerName: 'Init',
+        width: 80,
         renderCell: (params) => {
             return (
                 <strong>
-                    <input
-                        style={{ width: '50px' }}
-                        onChange={onGameIdChange(params.rowIndex)}
-                        value={params.row.gameId || '-'}
-                    />
+                    {duplicates.includes(params.row.monsterId) && (
+                        <input
+                            style={{ width: '50px' }}
+                            onChange={onInitiativeChange(params.rowIndex)}
+                            value={params.row.monsterInitiative || '-'}
+                        />
+                    )}
                 </strong>
             );
         },
@@ -41,7 +50,6 @@ const columns = ({ onGameIdChange, onMonsterAvatarChange, onAdd }) => [
         description: '',
         width: 100,
         renderCell: (params) => {
-            console.log('params', params);
             return (
                 <strong>
                     <MonsterAvatar alt="pour les aveugles" src={params.row.avatarUrl} />
@@ -58,6 +66,9 @@ const columns = ({ onGameIdChange, onMonsterAvatarChange, onAdd }) => [
         type: 'number',
         width: 80,
         isCellEditable: true,
+        renderCell: (params) => {
+            return <span style={{ color: HpColors[params.row.hpState] }}>{params.row.remainingHp}</span>;
+        },
     },
     {
         field: 'damageReceived',
@@ -82,7 +93,7 @@ const columns = ({ onGameIdChange, onMonsterAvatarChange, onAdd }) => [
         description: 'Green | Orange | Red',
         width: 130,
         renderCell: (params) => {
-            return <span style={{ color: params.row.hpState }}>{params.row.hpState}</span>;
+            return <span style={{ color: HpColors[params.row.hpState] }}>{params.row.hpState}</span>;
         },
     },
 
@@ -92,7 +103,6 @@ const columns = ({ onGameIdChange, onMonsterAvatarChange, onAdd }) => [
         description: '',
         width: 200,
         renderCell: (params) => {
-            console.log('params', params);
             return (
                 <strong>
                     <input
@@ -106,22 +116,24 @@ const columns = ({ onGameIdChange, onMonsterAvatarChange, onAdd }) => [
     },
 ];
 
-export const CurrentBoard = ({ board = {}, updateGameId, onSelectedChange, onMonsterAvatarChange }) => {
+export const CurrentBoard = ({ board = {}, updateMonsterInitiative, onSelectedChange, onMonsterAvatarChange }) => {
     const formatMonsters = board?.monsters?.map((monster) => ({
         gameId: monster.gameId,
         ...monster,
         remainingHp: monster.hpMax ? monster.hpMax - monster.damageReceived : null,
-        id: uuid(),
     }));
 
     if (!formatMonsters?.length) return <span>No Game initiate</span>;
+    const monstersIds = formatMonsters.map((it) => it.monsterId);
+    const duplicates = [...new Set(monstersIds.filter((monster, index) => monstersIds.indexOf(monster) !== index))];
     return (
         <div style={{ height: 400, width: '100%' }}>
             <DataGrid
                 isCellEditable={true}
                 rows={formatMonsters}
                 columns={columns({
-                    onGameIdChange: updateGameId,
+                    duplicates,
+                    onInitiativeChange: updateMonsterInitiative,
                     onAdd: onSelectedChange,
                     onMonsterAvatarChange: onMonsterAvatarChange,
                 })}
